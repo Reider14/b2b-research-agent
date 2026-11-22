@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from "@google/generative-ai";
+import OpenAI from "openai";
 import { z } from "zod";
 import * as dotenv from "dotenv";
 
@@ -11,73 +11,65 @@ const EmpresaSchema = z.object({
     nome: z.string(),
     setor: z.string(),
     tecnologias: z.array(z.string()),
-    resumoModeloNegocio: z.string(),
-    estimativaFuncionarios: z.number().optional(),
-    nivelConfianca: z.enum(["alto", "medio", "baixo"]),
+    resumoModeloNegocio: z
+        .string()
+        .describe("Resuma o modelo de negocio em no maximo 2 frases"),
+    estimativaFuncionarios: z
+        .number()
+        .nullable()
+        .describe("Estimativa aproximada. Use null se nao souber."),
+    nivelConfianca: z
+        .enum(["alto", "medio", "baixo"])
+        .describe("Nivel de certeza sobre os dados informados."),
+
 });
-
-
-const empresaResponseSchema: ResponseSchema = {
-    type: SchemaType.OBJECT,
-    properties: {
-        nome: { type: SchemaType.STRING },
-        setor: { type: SchemaType.STRING },
-        tecnologias: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING}, 
-        },
-        resumoModeloNegocio: {
-            type: SchemaType.STRING,
-            description: "Resuma o modelo de negocio em no maximo 2 frases",
-        },
-        estimativaFuncionarios: {
-            type: SchemaType.NUMBER,
-            description: "Estimativa aproximada. Omite se nao souber."
-        },
-        nivelConfianca: {
-            type: SchemaType.STRING,
-            format: "enum",
-            enum: ["alto", "medio", "baixo"],
-            description: "Nivel de certeza sobre os dados informados.",
-        },
-        
-    },
-    required: [
-        "nome",
-        "setor",
-        "tecnologias",
-        "resumoModeloNegocio",
-        "nivelConfianca",
-    ]
-}
 
 type Empresa = z.infer<typeof EmpresaSchema>;
 
+const { $schema: __, ...empresaJsonSchema } = z.toJSONSchema(EmpresaSchema);
+
 async function pesquisarEmpresa(nomeEmpresa: string): Promise<Empresa>{
-    const apiKey = process.env["GEMINI_API_KEY"];
+    const apiKey = process.env["OPENAI_API_KEY"];
     if (!apiKey) {
-        throw new Error("GEMINI_API_KEY nao encontrada no .env");
+        throw new Error("OPENAI_API_KEY nao encontrada no .env");
     }
 
-    // 2. Inicializar cliente e modelo em JSON Mode
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-        model: "gemini-3.8-flash",
-        systemInstruction: "Voce e um analista de pesquisa B2B rigoroso. Responda sempre em portugues." 
-        + "Nunca invente informacoes: se nao conhecer a empresa ou nao tiver certeza, " 
-        + "defina nivelConfianca como 'baixo' e deixe claro no resumo que nao ha dados suficientes.",
-        generationConfig: {
-            temperature: 0,
-            responseMimeType: "application/json",
-            responseSchema: empresaResponseSchema,
+    // 2. Inicializar cliente OpenAI
+    const genAI = new OpenAI(apiKey);
+    //3. Chamar LLM com Structured Outputs
+
+    const completation = await genAI.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0,
+        messages: [
+            {
+                role: "system",
+                content: `Voce e um analista de pesquisa B2B rigoroso. Responda sempre em portugues. `
+                    + `Nunca invente informacoes: se nao conhecer a empresa ou nao tiver certeza, `
+                    + `defina nivelConfianca como 'baixo' e deixe claro no resumo que nao ha dados suficientes.`
+            },
+            {
+                role: "user",
+                content: `Analise a empresa "${nomeEmpresa}"`
+            },
+        ],
+        response_format: {
+            type: "json_schema",
+            json_schema: {
+                name: "empresa_b2b",
+                strict: true,
+                schema: empresaJsonSchema
+            }
+        }
         },
-    });
+    );
 
-    const prompt = `Analisa a empresa "${nomeEmpresa}"`;
 
-    //3. Chamar o LLM
-    const result = await model.generateContent(prompt);
-    const textoBruto = result.response.text();
+    
+    const textoBruto = completation.choices[0]?.message.content;
+    if(!textoBruto){
+        throw new Error("A OpenAI retornou uma resposta vazia.");
+    }
 
     //4. Parsear o texto em objeto JS e validar contra o contrato Zod
     const jsonBruto: unknown = JSON.parse(textoBruto);
