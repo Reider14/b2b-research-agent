@@ -1,6 +1,7 @@
 import sys
 
-from .research import pesquisar_empresa
+#from .research import pesquisar_empresa
+from .agent import pesquisar_empresa_com_agente
 
 EMPRESAS = [
     "Microsoft",
@@ -13,7 +14,7 @@ EMPRESAS = [
 def main() -> int:
     for empresa in sys.argv[1:] or EMPRESAS:
         print(f"\nA pesquisar empresa: {empresa} ...")
-        resultado = pesquisar_empresa(empresa)
+        resultado = pesquisar_empresa_com_agente(empresa)
         print(resultado.model_dump_json(indent=2))
     return 0
 
