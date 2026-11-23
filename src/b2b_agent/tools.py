@@ -2,10 +2,11 @@ import json
 
 BASE_CONHECIMENTO = {
     "microsoft": {
-        "nome": "Microsoft",
-        "setor": "Tecnologia",
-        "funcionarios": 228000,
-        "descricao": "Software, nuvem (Azure), jogos e dispositivos.",
+    "nome": "Microsoft",
+    "setor": "Tecnologia",
+    "funcionarios": 228000,
+    "descricao": "Software, nuvem (Azure), jogos e dispositivos.",
+    "tecnologias": ["Software", "Nuvem (Azure)", "Jogos", "Dispositivos"],
     },
     "meta": {
         "nome": "Meta Platforms",
@@ -13,6 +14,7 @@ BASE_CONHECIMENTO = {
         "funcionarios": 74000,
         "descricao": "Redes sociais (Facebook, Instagram, WhatsApp) e realidade virtual.",
         "nome_anterior": "Facebook, Inc.",
+        "tecnologias": ["Redes sociais", "Realidade virtual", "Publicidade digital"],
     },
 }
 
