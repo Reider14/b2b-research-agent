@@ -40,7 +40,7 @@ def buscar_empresa(nome: str) -> str:
         }
     )
 
-TOOLS = {
+TOOLS = [{
     "type": "function",
     "function": {
         "name": "buscar_empresa",
@@ -49,6 +49,7 @@ TOOLS = {
             "Use sempre antes de responder. Se encontrado for false, "
             "nao ha dados confiaveis sobre a empresa."
         ),
+        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -56,13 +57,14 @@ TOOLS = {
                     "type": "string",
                     "description": "Nome da empresa",
                 },
-                "required": ["nome"]
-            }
+            },
+            "required": ["nome"],
+            "additionalProperties": False
         }
     }
 
 }
-
+]
 FUNCOES = {"buscar_empresa": buscar_empresa}
 
 def executar_ferramenta(nome: str, argumentos_json: str) -> str:

@@ -35,3 +35,10 @@ def structured_completion(system: str, user: str, schema):
     if message.parsed is None:
         raise RuntimeError("A OpenAI retornou um resposta vazia.")
     return message.parsed
+
+
+def get_client() -> OpenAI:
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY nao encontrado no .env")
+    return OpenAI(api_key=api_key)
