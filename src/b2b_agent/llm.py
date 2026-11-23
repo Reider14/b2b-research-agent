@@ -23,8 +23,8 @@ def structured_completion(system: str, user: str, schema):
         model=MODEL,
         temperature=0,
         messages=[
-            {"role": "system", content: system},
-            {"role": "user", content: user}
+            {"role": "system", "content": system},
+            {"role": "user", "content": user}
         ],
         response_format=schema
     )
