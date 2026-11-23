@@ -1,20 +1,18 @@
-# Dependencies
-node_modules/
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
 # Environment variables
 .env
 .env.*
 !.env.example
 
-# Build outputs
-dist/
-*.tsbuildinfo
-
 # Logs
 *.log
-
-# Personal study docs
-Doc/
 
 # Personal study docs
 Doc/
